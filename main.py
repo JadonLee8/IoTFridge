@@ -1,14 +1,8 @@
-from machine import Pin
-from utime import sleep
+from LAN_Server import Server
 
-pin = Pin("LED", Pin.OUT)
+# Create a server object
+server = Server('TAMU IoT')
 
-print("LED starts flashing...")
+# Run the server
 while True:
-    try:
-        pin.toggle()
-        sleep(1) # sleep 1sec
-    except KeyboardInterrupt:
-        break
-pin.off()
-print("Finished.")
+    server.serve(tempurature=0)
