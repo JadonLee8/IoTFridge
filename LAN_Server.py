@@ -9,12 +9,15 @@ class Server:
     def __init__(self, ssid):
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
-        while not self.wlan.isconnected():
+        self.wlan.connect(ssid)
+        while self.wlan.isconnected() == False:
             print(f"Connecting to {ssid}")
             sleep(1)
         self.ip = self.wlan.ifconfig()[0]
         print(f'Connected on {self.ip}')
         self.connection = self.open_socket()
+        pico_led.off()
+        self.state = 'OFF'
 
 
     def open_socket(self):
@@ -22,20 +25,18 @@ class Server:
         address = (self.ip, 80)
         connection = socket.socket()
         connection.bind(address)
+        # try:
+        #     connection.bind(address)
+        # except Exception as e:
+        #     print(e)
+        #     connection.close()
         connection.listen(1)
         return connection
 
-    def webpage(self, temperature, state):
+    def webpage(self, temperature):
         html = f"""
                 <!DOCTYPE html>
                 <html>
-                <form action="./lighton">
-                <input type="submit" value="Light on" />
-                </form>
-                <form action="./lightoff">
-                <input type="submit" value="Light off" />
-                </form>
-                <p>LED is {state}</p>
                 <p>Temperature is {temperature}</p>
                 </body>
                 </html>
@@ -44,8 +45,10 @@ class Server:
 
     def serve(self, tempurature):
         client = self.connection.accept()[0]
+        print(client)
         request = client.recv(1024)
         request = str(request)
+        print(request)
         try:
             request = request.split()[1]
         except IndexError:
@@ -53,11 +56,15 @@ class Server:
             pass
         if request == '/lighton?':
             pico_led.on()
-            state = 'ON'
+            self.state = 'ON'
         elif request =='/lightoff?':
             pico_led.off()
-            state = 'OFF'
-        html = self.webpage(tempurature, state)
+            self.state = 'OFF'
+        # TODO: return the request so that fridge power can take in fridge power request as param
+        html = self.webpage(tempurature)
         client.send(html)
         client.close()
+
+    # def close_socket(self):
+    #     self.connection.close()
 
