@@ -17,7 +17,7 @@ class Server:
         print(f'Connected on {self.ip}')
         self.connection = self.open_socket()
         pico_led.off()
-        self.power = 2.5
+        self.power = 4
 
 
     def open_socket(self):
@@ -33,35 +33,48 @@ class Server:
         connection.listen(1)
         return connection
 
+# TODO: also give user option to type in power. make sure to include input validation
     def webpage(self, temperature, power):
         html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>IoT Fridge</title>
-            </head>
-            <body>
-                <h1>IoT Fridge</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IoT Fridge</title>
+    <style>
+        body {{
+            overflow: hidden;
+        }}
+    </style>
+</head>
+<body>
+    <h1 style="font-family: Arial, sans-serif; color: #2c3e50; text-align: center; background-color: #ecf0f1; padding: 20px 0; margin: 0;">IoT Fridge</h1>
 
-                <!-- Form that submits via GET -->
-                <form action="/setpower" method="GET">
-                    <label for="powerRange">Set Power:</label>
-                    <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)">
-                    <span id="powerValue">{power}</span>
-                    <br>
-                    <button type="submit">Set Power</button>
-                </form>
+    <!-- Form that submits via GET -->
+    <div style="text-align: center;">
+        <form action="/setpower" method="GET" style="font-family: Arial, sans-serif; color: #34495e; display: inline-block; text-align: center;">
+            <label for="powerRange" style="font-family: Arial, sans-serif; color: #34495e;">Set Power:</label>
+            <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)" style="margin: 10px 0;">
+            <span id="powerValue" style="font-family: Arial, sans-serif; color: #34495e;">{power}</span>
+            <br>
+            <button type="submit" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Set Power</button>
+        </form>
 
-                <script>
-                    function updatePowerValue(value) {{
-                        document.getElementById('powerValue').textContent = value;
-                    }}
-                </script>
+        <script>
+            function updatePowerValue(value) {{
+                document.getElementById('powerValue').textContent = value;
+            }}
+        </script>
 
-                <p>Temperature is {temperature}</p>
-                <p>Power is {power}</p>
-            </body>
-            </html>
+        <p style="font-family: Arial, sans-serif; color: #34495e;">Temperature is {temperature}</p>
+        <p style="font-family: Arial, sans-serif; color: #34495e;">Power is {power}</p>
+        <div style="text-align: center; margin-top: 100px"></div>
+            <p style="font-family: Arial, sans-serif; color: #34495e;">Made by Jadon Lee</p>
+            <p style="font-family: Arial, sans-serif; color: #34495e;">Github: <a href="https://github.com/JadonLee8" style="color: #3498db;">https://github.com/JadonLee8</a></p>
+        </div>
+    </div>
+
+</body>
+</html>
             """
         return str(html)
 

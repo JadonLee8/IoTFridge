@@ -24,6 +24,6 @@ class FridgePower:
     def max(self):
         self.servo.write(180)
 
-    # power expressed as a percentage. 0 to 1 inclusive
+    # power expressed as a percentage. 1 to 5 inclusive
     def set_power(self, power):
-        self.servo.write(int(power * 180))
+        self.servo.write(int((power-1) * (180/4)))

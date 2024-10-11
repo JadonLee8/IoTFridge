@@ -14,12 +14,15 @@ temp_sensor = TempSensor()
 fridge_power = FridgePower()
 
 tempurature = 0
+power = 4
 
 # Run the server
 try:
     while True:
         tempurature = temp_sensor.fahrenheit()
-        server.serve(tempurature)
+        power = server.serve(tempurature)
+        fridge_power.set_power(power)
+
 except KeyboardInterrupt:
     print("KeyboardInterrupt")
     if server:
