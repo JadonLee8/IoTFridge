@@ -17,7 +17,7 @@ class Server:
         print(f'Connected on {self.ip}')
         self.connection = self.open_socket()
         pico_led.off()
-        self.state = 'OFF'
+        self.power = 2.5
 
 
     def open_socket(self):
@@ -33,37 +33,56 @@ class Server:
         connection.listen(1)
         return connection
 
-    def webpage(self, temperature):
+    def webpage(self, temperature, power):
         html = f"""
-                <!DOCTYPE html>
-                <html>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>IoT Fridge</title>
+            </head>
+            <body>
+                <h1>IoT Fridge</h1>
+
+                <!-- Form that submits via GET -->
+                <form action="/setpower" method="GET">
+                    <label for="powerRange">Set Power:</label>
+                    <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)">
+                    <span id="powerValue">{power}</span>
+                    <br>
+                    <button type="submit">Set Power</button>
+                </form>
+
+                <script>
+                    function updatePowerValue(value) {{
+                        document.getElementById('powerValue').textContent = value;
+                    }}
+                </script>
+
                 <p>Temperature is {temperature}</p>
-                </body>
-                </html>
-                """
+                <p>Power is {power}</p>
+            </body>
+            </html>
+            """
         return str(html)
 
     def serve(self, tempurature):
         client = self.connection.accept()[0]
-        print(client)
         request = client.recv(1024)
-        request = str(request)
+        request = request.decode()
         print(request)
         try:
             request = request.split()[1]
+            print(request)
         except IndexError:
             print('IndexError')
             pass
-        if request == '/lighton?':
-            pico_led.on()
-            self.state = 'ON'
-        elif request =='/lightoff?':
-            pico_led.off()
-            self.state = 'OFF'
-        # TODO: return the request so that fridge power can take in fridge power request as param
-        html = self.webpage(tempurature)
+        if '/setpower?' in request:
+            self.power = float(request.split('=')[1])
+            print(self.power)
+        html = self.webpage(tempurature, self.power)
         client.send(html)
         client.close()
+        return self.power
 
     # def close_socket(self):
     #     self.connection.close()

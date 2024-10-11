@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IoT Fridge</title>
 </head>
 <body>
-    <!-- This file is not rendered, it is for page design. The rendered html is copied into the LAN_Server.py file -->
     <h1>IoT Fridge</h1>
-    <label for="powerRange">Set Power:</label>
-    <input type="range" id="powerRange" name="powerRange" min="1" max="5" step="0.1" oninput="updatePowerValue(this.value)">
-    <span id="powerValue">3</span>
+
+    <!-- Form that submits via GET -->
+    <form action="/setpower" method="GET">
+        <label for="powerRange">Set Power:</label>
+        <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="3" oninput="updatePowerValue(this.value)">
+        <span id="powerValue">3</span>
+        <br>
+        <button type="submit">Set Power</button>
+    </form>
 
     <script>
         function updatePowerValue(value) {
             document.getElementById('powerValue').textContent = value;
         }
     </script>
+
+    <p>Temperature is {temperature}</p>
+    <p>Power is {power}</p>
 </body>
 </html>
