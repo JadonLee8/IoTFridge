@@ -33,68 +33,85 @@ class Server:
         connection.listen(1)
         return connection
 
+# TODO: give user opyion to change to celcius
 # TODO: also give user option to type in power. make sure to include input validation
     def webpage(self, temperature, power):
         html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>IoT Fridge</title>
-    <style>
-        body {{
-            overflow: hidden;
-        }}
-    </style>
-</head>
-<body>
-    <h1 style="font-family: Arial, sans-serif; color: #2c3e50; text-align: center; background-color: #ecf0f1; padding: 20px 0; margin: 0;">IoT Fridge</h1>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>IoT Fridge</title>
+            <style>
+                body {{
+                    overflow: hidden;
+                }}
+            </style>
+        </head>
+        <body>
+            <h1 style="font-family: Arial, sans-serif; color: #2c3e50; text-align: center; background-color: #ecf0f1; padding: 20px 0; margin: 0;">IoT Fridge</h1>
 
-    <!-- Form that submits via GET -->
-    <div style="text-align: center;">
-        <form action="/setpower" method="GET" style="font-family: Arial, sans-serif; color: #34495e; display: inline-block; text-align: center;">
-            <label for="powerRange" style="font-family: Arial, sans-serif; color: #34495e;">Set Power:</label>
-            <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)" style="margin: 10px 0;">
-            <span id="powerValue" style="font-family: Arial, sans-serif; color: #34495e;">{power}</span>
-            <br>
-            <button type="submit" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Set Power</button>
-        </form>
+            <!-- Form that submits via GET -->
+            <div style="text-align: center;">
+                <form action="/setpower" method="GET" style="font-family: Arial, sans-serif; color: #34495e; display: inline-block; text-align: center;">
+                    <label for="powerRange" style="font-family: Arial, sans-serif; color: #34495e;">Set Power:</label>
+                    <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)" style="margin: 10px 0;">
+                    <span id="powerValue" style="font-family: Arial, sans-serif; color: #34495e;">{power}</span>
+                    <br>
+                    <button type="submit" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Set Power</button>
+                </form>
 
-        <script>
-            function updatePowerValue(value) {{
-                document.getElementById('powerValue').textContent = value;
-            }}
-        </script>
+                <script>
+                    function updatePowerValue(value) {{
+                        document.getElementById('powerValue').textContent = value;
+                    }}
+                </script>
 
-        <p style="font-family: Arial, sans-serif; color: #34495e;">Temperature is {temperature}</p>
-        <p style="font-family: Arial, sans-serif; color: #34495e;">Power is {power}</p>
-        <div style="text-align: center; margin-top: 100px"></div>
-            <p style="font-family: Arial, sans-serif; color: #34495e;">Made by Jadon Lee</p>
-            <p style="font-family: Arial, sans-serif; color: #34495e;">Github: <a href="https://github.com/JadonLee8" style="color: #3498db;">https://github.com/JadonLee8</a></p>
-        </div>
-    </div>
+                <p style="font-family: Arial, sans-serif; color: #34495e;">Temperature is {temperature}</p>
+                <p style="font-family: Arial, sans-serif; color: #34495e;">Power is {power}</p>
+                <div style="text-align: center; margin-top: 100px"></div>
+                    <p style="font-family: Arial, sans-serif; color: #34495e;">Made by Jadon Lee</p>
+                    <p style="font-family: Arial, sans-serif; color: #34495e;">Github: <a href="https://github.com/JadonLee8" style="color: #3498db;">https://github.com/JadonLee8</a></p>
+                </div>
+            </div>
 
-</body>
-</html>
-            """
+        </body>
+        </html>
+                    """
         return str(html)
 
-    def serve(self, tempurature):
-        client = self.connection.accept()[0]
-        request = client.recv(1024)
-        request = request.decode()
-        print(request)
+    def serve(self, temperature):
         try:
-            request = request.split()[1]
+            # Set the socket to non-blocking mode
+            self.connection.setblocking(False)
+
+            # Try to accept a client connection
+            client, _ = self.connection.accept()
+
+            # If a connection is accepted, process the request
+            request = client.recv(1024)
+            request = request.decode()
             print(request)
-        except IndexError:
-            print('IndexError')
-            pass
-        if '/setpower?' in request:
-            self.power = float(request.split('=')[1])
-            print(self.power)
-        html = self.webpage(tempurature, self.power)
-        client.send(html)
-        client.close()
+            try:
+                request = request.split()[1]
+                print(request)
+            except IndexError:
+                print('IndexError')
+                pass
+
+            # Check if the request is to set power
+            if '/setpower?' in request:
+                self.power = float(request.split('=')[1])
+                print(self.power)
+
+            # Send the webpage as a response
+            html = self.webpage(temperature, self.power)
+            client.send(html)
+            client.close()
+
+        except OSError as e:
+            # No client connection, return power and continue
+            pass  # OSError is raised when no client is trying to connect (non-blocking)
+
         return self.power
 
     # def close_socket(self):
