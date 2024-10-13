@@ -17,7 +17,7 @@ class Server:
         print(f'Connected on {self.ip}')
         self.connection = self.open_socket()
         pico_led.off()
-        self.power = 4
+        self.power = 40
 
 
     def open_socket(self):
@@ -53,8 +53,8 @@ class Server:
             <!-- Form that submits via GET -->
             <div style="text-align: center;">
                 <form action="/setpower" method="GET" style="font-family: Arial, sans-serif; color: #34495e; display: inline-block; text-align: center;">
-                    <label for="powerRange" style="font-family: Arial, sans-serif; color: #34495e;">Set Power:</label>
-                    <input type="range" id="powerRange" name="value" min="1" max="5" step="0.1" value="{power}" oninput="updatePowerValue(this.value)" style="margin: 10px 0;">
+                    <label for="powerRange" style="font-family: Arial, sans-serif; color: #34495e;">Set Temp:</label>
+                    <input type="range" id="powerRange" name="value" min="30" max="55" step="0.1" value="{power}" oninput="updatePowerValue(this.value)" style="margin: 10px 0;">
                     <span id="powerValue" style="font-family: Arial, sans-serif; color: #34495e;">{power}</span>
                     <br>
                     <button type="submit" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer;">Set Power</button>
@@ -66,8 +66,8 @@ class Server:
                     }}
                 </script>
 
-                <p style="font-family: Arial, sans-serif; color: #34495e;">Temperature is {temperature}</p>
-                <p style="font-family: Arial, sans-serif; color: #34495e;">Power is {power}</p>
+                <p style="font-family: Arial, sans-serif; color: #34495e;">Temperature is {temperature} f</p>
+                <p style="font-family: Arial, sans-serif; color: #34495e;">Setting is {power} f</p>
                 <div style="text-align: center; margin-top: 100px"></div>
                     <p style="font-family: Arial, sans-serif; color: #34495e;">Made by Jadon Lee</p>
                     <p style="font-family: Arial, sans-serif; color: #34495e;">Github: <a href="https://github.com/JadonLee8" style="color: #3498db;">https://github.com/JadonLee8</a></p>
@@ -79,39 +79,23 @@ class Server:
                     """
         return str(html)
 
-    def serve(self, temperature):
+    def serve(self, tempurature):
+        client = self.connection.accept()[0]
+        request = client.recv(1024)
+        request = request.decode()
+        print(request)
         try:
-            # Set the socket to non-blocking mode
-            self.connection.setblocking(False)
-
-            # Try to accept a client connection
-            client, _ = self.connection.accept()
-
-            # If a connection is accepted, process the request
-            request = client.recv(1024)
-            request = request.decode()
+            request = request.split()[1]
             print(request)
-            try:
-                request = request.split()[1]
-                print(request)
-            except IndexError:
-                print('IndexError')
-                pass
-
-            # Check if the request is to set power
-            if '/setpower?' in request:
-                self.power = float(request.split('=')[1])
-                print(self.power)
-
-            # Send the webpage as a response
-            html = self.webpage(temperature, self.power)
-            client.send(html)
-            client.close()
-
-        except OSError as e:
-            # No client connection, return power and continue
-            pass  # OSError is raised when no client is trying to connect (non-blocking)
-
+        except IndexError:
+            print('IndexError')
+            pass
+        if '/setpower?' in request:
+            self.power = float(request.split('=')[1])
+            print(self.power)
+        html = self.webpage(tempurature, self.power)
+        client.send(html)
+        client.close()
         return self.power
 
     # def close_socket(self):
